@@ -18,8 +18,8 @@
 
 package stream
 
-// DefaultAntsPoolSize The default capacity of the default goroutine pool
-const DefaultAntsPoolSize = 10000
+// DefaultWorkSize The default size of work
+const DefaultWorkSize = 10000
 
 // Options Options
 type Options struct {
@@ -36,7 +36,7 @@ func loadOptions(options ...Option) *Options {
 	}
 	// set the default pool size
 	if op.workSize <= 0 {
-		op.workSize = DefaultAntsPoolSize
+		op.workSize = DefaultWorkSize
 	}
 	return op
 }
@@ -48,8 +48,8 @@ func WithOption(options *Options) Option {
 	}
 }
 
-// WithPoolSize return a Option that set pool size
-func WithPoolSize(size int) Option {
+// WithWorkSize return a Option that set size of work
+func WithWorkSize(size int) Option {
 	return func(options *Options) {
 		options.workSize = size
 	}

@@ -18,9 +18,6 @@
 
 package stream
 
-// DefaultWorkSize The default size of work
-const DefaultWorkSize = 10000
-
 // Options Options
 type Options struct {
 	workSize int
@@ -36,7 +33,7 @@ func loadOptions(options ...Option) *Options {
 	}
 	// set the default pool size
 	if op.workSize <= 0 {
-		op.workSize = DefaultWorkSize
+		op.workSize = 1
 	}
 	return op
 }

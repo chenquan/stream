@@ -272,13 +272,12 @@ func TestStream_FlatMap(t *testing.T) {
 	}).Foreach(func(item interface{}) {
 		fmt.Println(item)
 	})
-	Of()
 }
 func TestStream_ParallelFinish(t *testing.T) {
 
 	Of(1, 23).ParallelFinish(func(item interface{}) {
 
-	}, WithPoolSize(2))
+	}, WithWorkSize(2))
 }
 
 func TestStream_AnyMach(t *testing.T) {

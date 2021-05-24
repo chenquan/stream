@@ -26,30 +26,53 @@ import (
 )
 
 type (
-	KeyFunc  func(item interface{}) interface{}
+	// FilterFunc defines the method to filter a Stream.
+	FilterFunc func(item interface{}) bool
+	// ForAllFunc defines the method to handle all elements in a Stream.
+	ForAllFunc func(pipe <-chan interface{})
+	// ForEachFunc defines the method to handle each element in a Stream.
+	ForEachFunc func(item interface{})
+	// GenerateFunc defines the method to send elements into a Stream.
+	GenerateFunc func(source chan<- interface{})
+	// KeyFunc defines the method to generate keys for the elements in a Stream.
+	KeyFunc func(item interface{}) interface{}
+	// LessFunc defines the method to compare the elements in a Stream.
 	LessFunc func(a, b interface{}) bool
-
-	Stream struct {
-		source <-chan interface{}
-	}
+	// MapFunc defines the method to map each element to another object in a Stream.
+	MapFunc func(item interface{}) interface{}
+	// ParallelFunc defines the method to handle elements parallelly.
+	ParallelFunc func(item interface{})
+	// ReduceFunc defines the method to reduce all the elements in a Stream.
+	ReduceFunc func(pipe <-chan interface{}) (interface{}, error)
+	// WalkFunc defines the method to walk through all the elements in a Stream.
+	WalkFunc func(item interface{}, pipe chan<- interface{})
 )
 
+// Stream Represents a stream.
+type Stream struct {
+	source <-chan interface{}
+}
+
+// empty a empty Stream.
 var empty = &Stream{source: make(chan interface{})}
 
 func (s *Stream) String() string {
 	return fmt.Sprintf("Stream{len:%d,cap:%d}", len(s.source), cap(s.source))
 }
 
-type MapFunc func(item interface{}) interface{}
-
+// Empty Returns a empty stream.
 func Empty() *Stream {
 	return empty
 }
+
+// Range Returns a Stream from source channel.
 func Range(source <-chan interface{}) *Stream {
 	return &Stream{
 		source: source,
 	}
 }
+
+// Of Returns a Stream based any element
 func Of(items ...interface{}) *Stream {
 	source := make(chan interface{}, len(items))
 	for _, item := range items {
@@ -58,11 +81,14 @@ func Of(items ...interface{}) *Stream {
 	close(source)
 	return Range(source)
 }
+
+// Concat Returns a concat Stream.
 func Concat(a *Stream, others ...*Stream) *Stream {
 	return a.Concat(others...)
 }
 
-func From(generate func(source chan<- interface{})) *Stream {
+// From Returns a Stream from generate function.
+func From(generate GenerateFunc) *Stream {
 	source := make(chan interface{})
 
 	NewGoroutine(func() {
@@ -72,6 +98,7 @@ func From(generate func(source chan<- interface{})) *Stream {
 	return Range(source)
 }
 
+// Distinct Returns a distinct Stream.
 func (s *Stream) Distinct(f KeyFunc) *Stream {
 	source := make(chan interface{})
 
@@ -88,12 +115,16 @@ func (s *Stream) Distinct(f KeyFunc) *Stream {
 	})
 	return Range(source)
 }
+
+// Count Returns a number that the elements total size.
 func (s *Stream) Count() (count int) {
 	for range s.source {
 		count++
 	}
 	return
 }
+
+// Buffer Returns a buffer Stream.
 func (s *Stream) Buffer(n int) *Stream {
 	if n < 0 {
 		n = 0
@@ -108,6 +139,8 @@ func (s *Stream) Buffer(n int) *Stream {
 
 	return Range(source)
 }
+
+// Finish Done Stream.
 func (s *Stream) Finish(fs ...func(item interface{})) {
 	for item := range s.source {
 		for _, f := range fs {
@@ -115,9 +148,13 @@ func (s *Stream) Finish(fs ...func(item interface{})) {
 		}
 	}
 }
+
+// Chan Returns a channel of Stream.
 func (s *Stream) Chan() <-chan interface{} {
 	return s.source
 }
+
+// Split Returns a split Stream that contains multiple slices of chunk size n.
 func (s *Stream) Split(n int) *Stream {
 	if n < 1 {
 		panic("n should be greater than 0")
@@ -139,6 +176,8 @@ func (s *Stream) Split(n int) *Stream {
 	}()
 	return Range(source)
 }
+
+// SplitSteam Returns a split Stream that contains multiple stream of chunk size n.
 func (s *Stream) SplitSteam(n int) *Stream {
 	if n < 1 {
 		panic("n should be greater than 0")
@@ -167,6 +206,7 @@ func (s *Stream) SplitSteam(n int) *Stream {
 	return Range(source)
 }
 
+// Sort Returns a sorted Stream.
 func (s *Stream) Sort(less LessFunc) *Stream {
 	var items []interface{}
 	for item := range s.source {
@@ -177,6 +217,8 @@ func (s *Stream) Sort(less LessFunc) *Stream {
 	})
 	return Of(items...)
 }
+
+// Tail Returns a Stream that has n element at the end.
 func (s *Stream) Tail(n int64) *Stream {
 	if n < 1 {
 		panic("n should be greater than 0")
@@ -197,6 +239,7 @@ func (s *Stream) Tail(n int64) *Stream {
 	return Range(source)
 }
 
+// Head Returns a Stream that has n element at the head.
 func (s *Stream) Head(n int64) *Stream {
 	if n < 1 {
 		panic("n must be greater than 0")
@@ -211,9 +254,6 @@ func (s *Stream) Head(n int64) *Stream {
 				source <- item
 			}
 			if n == 0 {
-				// let successive method go ASAP even we have more items to skip
-				// why we don't just break the loop, because if break,
-				// this former goroutine will block forever, which will cause goroutine leak.
 				close(source)
 			}
 		}
@@ -225,6 +265,7 @@ func (s *Stream) Head(n int64) *Stream {
 	return Range(source)
 }
 
+// Skip Returns a Stream that skips size elements.
 func (s *Stream) Skip(size int) *Stream {
 	if size == 0 {
 		return s
@@ -247,6 +288,7 @@ func (s *Stream) Skip(size int) *Stream {
 	return Range(source)
 }
 
+// Limit Returns a Stream that contains size elements.
 func (s *Stream) Limit(size int) *Stream {
 	if size == 0 {
 		return Of()
@@ -269,7 +311,8 @@ func (s *Stream) Limit(size int) *Stream {
 	return Range(source)
 }
 
-func (s *Stream) Foreach(f func(item interface{})) {
+// Foreach Traversals all elements.
+func (s *Stream) Foreach(f ForEachFunc) {
 	items := make([]interface{}, 0)
 	for item := range s.source {
 		f(item)
@@ -277,7 +320,9 @@ func (s *Stream) Foreach(f func(item interface{})) {
 	}
 
 }
-func (s *Stream) ForeachOrdered(f func(item interface{})) {
+
+// ForeachOrdered Traversals all elements in reverse order.
+func (s *Stream) ForeachOrdered(f ForEachFunc) {
 	items := make([]interface{}, 0)
 	for item := range s.source {
 		items = append(items, item)
@@ -289,12 +334,13 @@ func (s *Stream) ForeachOrdered(f func(item interface{})) {
 
 }
 
+// Concat Returns a Stream that concat others streams
 func (s *Stream) Concat(others ...*Stream) *Stream {
 	source := make(chan interface{})
 	wg := sync.WaitGroup{}
 	for _, other := range others {
 		if s == other {
-			panic("other same")
+			continue
 		}
 		wg.Add(1)
 		go func(iother *Stream) {
@@ -320,8 +366,7 @@ func (s *Stream) Concat(others ...*Stream) *Stream {
 	return Range(source)
 }
 
-type FilterFunc func(item interface{}) bool
-
+// Filter Returns a Stream that
 func (s *Stream) Filter(fn FilterFunc, opts ...Option) *Stream {
 	return s.Walk(func(item interface{}, pipe chan<- interface{}) {
 		if fn(item) {
@@ -330,7 +375,9 @@ func (s *Stream) Filter(fn FilterFunc, opts ...Option) *Stream {
 	}, opts...)
 }
 
-func (s *Stream) Walk(f func(item interface{}, pipe chan<- interface{}), opts ...Option) *Stream {
+// Walk Returns a Stream that lets the callers handle each item, the caller may write zero,
+// one or more items base on the given item.
+func (s *Stream) Walk(f WalkFunc, opts ...Option) *Stream {
 	option := loadOptions(opts...)
 	pipe := make(chan interface{}, option.workSize)
 	go func() {
@@ -362,14 +409,17 @@ func (s *Stream) Walk(f func(item interface{}, pipe chan<- interface{}), opts ..
 	return Range(pipe)
 }
 
-type WalkFunc func(item interface{}, pipe chan<- interface{})
-
+// Map Returns a Stream consisting of the results of applying the given
+// function to the elements of this stream.
 func (s *Stream) Map(fn MapFunc, opts ...Option) *Stream {
 	return s.Walk(func(item interface{}, pipe chan<- interface{}) {
 		pipe <- fn(item)
 	}, opts...)
 }
 
+// FlatMap Returns a Stream consisting of the results of replacing each element of this stream with the contents of
+// a mapped stream produced by applying the provided mapping function to each element. Each mapped stream is closed
+// after its contents have been placed into this stream. (If a mapped stream is null an empty stream is used, instead.
 func (s *Stream) FlatMap(fn MapFunc, opts ...Option) *Stream {
 	return s.Walk(func(item interface{}, pipe chan<- interface{}) {
 		switch v := item.(type) {
@@ -383,6 +433,7 @@ func (s *Stream) FlatMap(fn MapFunc, opts ...Option) *Stream {
 	}, opts...)
 }
 
+// Group Returns a Stream that groups the elements into different groups based on their keys.
 func (s *Stream) Group(f KeyFunc) *Stream {
 	groups := make(map[interface{}][]interface{})
 	for item := range s.source {
@@ -400,6 +451,8 @@ func (s *Stream) Group(f KeyFunc) *Stream {
 
 	return Range(source)
 }
+
+// Merge Returns a Stream that merges all the items into a slice and generates a new stream.
 func (s *Stream) Merge() *Stream {
 	var items []interface{}
 	for item := range s.source {
@@ -412,6 +465,8 @@ func (s *Stream) Merge() *Stream {
 
 	return Range(source)
 }
+
+// Reverse Returns a Stream that reverses the elements.
 func (s *Stream) Reverse() *Stream {
 	var items []interface{}
 	for item := range s.source {
@@ -424,12 +479,17 @@ func (s *Stream) Reverse() *Stream {
 	return Of(items...)
 }
 
-func (s *Stream) ParallelFinish(fn func(item interface{}), opts ...Option) {
+// ParallelFinish applies the given ParallelFunc to each item concurrently with given number of workers
+func (s *Stream) ParallelFinish(fn ParallelFunc, opts ...Option) {
 	s.Walk(func(item interface{}, pipe chan<- interface{}) {
 		fn(item)
 	}, opts...).Finish()
 }
-func (s *Stream) AnyMach(f func(item interface{}) bool, opts ...Option) (isFind bool) {
+
+// AnyMach Returns whether any elements of this stream match the provided predicate.
+// May not evaluate the predicate on all elements if not necessary for determining the result.
+// If the stream is empty then false is returned and the predicate is not evaluated.
+func (s *Stream) AnyMach(f func(item interface{}) bool) (isFind bool) {
 	for item := range s.source {
 		if f(item) {
 			isFind = true
@@ -437,7 +497,11 @@ func (s *Stream) AnyMach(f func(item interface{}) bool, opts ...Option) (isFind 
 	}
 	return
 }
-func (s *Stream) AllMach(f func(item interface{}) bool, opts ...Option) (isFind bool) {
+
+// AllMach Returns whether all elements of this stream match the provided predicate.
+// May not evaluate the predicate on all elements if not necessary for determining the result.
+// If the stream is empty then true is returned and the predicate is not evaluated.
+func (s *Stream) AllMach(f func(item interface{}) bool) (isFind bool) {
 	isFind = true
 	for item := range s.source {
 		if !f(item) {
@@ -447,7 +511,10 @@ func (s *Stream) AllMach(f func(item interface{}) bool, opts ...Option) (isFind 
 	}
 	return
 }
-func (s *Stream) findFirst() (result interface{}, err error) {
+
+// FindFirst Returns an interface{} the first element of this stream, or a nil and a error if the stream is empty.
+// If the stream has no encounter order, then any element may be returned
+func (s *Stream) FindFirst() (result interface{}, err error) {
 	for item := range s.source {
 		result = item
 	}
@@ -456,7 +523,10 @@ func (s *Stream) findFirst() (result interface{}, err error) {
 	}
 	return
 }
-func (s *Stream) Peek(f func(item interface{})) *Stream {
+
+// Peek Returns a Stream consisting of the elements of this stream,
+// additionally performing the provided action on each element as elements are consumed from the resulting stream.
+func (s *Stream) Peek(f ForEachFunc) *Stream {
 	source := make(chan interface{})
 	go func() {
 		for item := range s.source {

@@ -54,13 +54,8 @@ type Stream struct {
 }
 
 // empty a empty Stream.
-var empty *Stream
+var empty = Of()
 
-func init() {
-	source := make(chan interface{})
-	empty = &Stream{source: source}
-	close(source)
-}
 func (s *Stream) String() string {
 	return fmt.Sprintf("Stream{len:%d,cap:%d}", len(s.source), cap(s.source))
 }

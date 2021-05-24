@@ -44,6 +44,9 @@ func TestEmpty(t *testing.T) {
 	empty := Empty()
 	assetEqual(t, len(empty.source), 0)
 	assetEqual(t, cap(empty.source), 0)
+	empty.Foreach(func(item interface{}) {
+
+	})
 }
 func TestRange(t *testing.T) {
 	stream1 := Range(make(chan interface{}))

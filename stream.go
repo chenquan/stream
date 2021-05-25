@@ -493,6 +493,7 @@ func (s *Stream) AnyMach(f func(item interface{}) bool) (isFind bool) {
 	for item := range s.source {
 		if f(item) {
 			isFind = true
+			return
 		}
 	}
 	return
@@ -517,10 +518,9 @@ func (s *Stream) AllMach(f func(item interface{}) bool) (isFind bool) {
 func (s *Stream) FindFirst() (result interface{}, err error) {
 	for item := range s.source {
 		result = item
+		return
 	}
-	if result == nil {
-		err = errors.New("no element")
-	}
+	err = errors.New("no element")
 	return
 }
 

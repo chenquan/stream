@@ -20,7 +20,6 @@ package stream
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 	"sync"
 )
@@ -54,10 +53,12 @@ type Stream struct {
 }
 
 // empty a empty Stream.
-var empty = Of()
+var empty *Stream
 
-func (s *Stream) String() string {
-	return fmt.Sprintf("Stream{len:%d,cap:%d}", len(s.source), cap(s.source))
+func init() {
+	source := make(chan interface{})
+	close(source)
+	empty = &Stream{source}
 }
 
 // Empty Returns a empty stream.
@@ -91,7 +92,7 @@ func Concat(a *Stream, others ...*Stream) *Stream {
 func From(generate GenerateFunc) *Stream {
 	source := make(chan interface{})
 
-	NewGoroutine(func() {
+	go NewGoroutine(func() {
 		defer close(source)
 		generate(source)
 	})
@@ -102,7 +103,7 @@ func From(generate GenerateFunc) *Stream {
 func (s *Stream) Distinct(f KeyFunc) *Stream {
 	source := make(chan interface{})
 
-	NewGoroutine(func() {
+	go NewGoroutine(func() {
 		defer close(source)
 		unique := make(map[interface{}]struct{})
 		for item := range s.source {
@@ -239,32 +240,6 @@ func (s *Stream) Tail(n int64) *Stream {
 	return Range(source)
 }
 
-// Head Returns a Stream that has n element at the head.
-func (s *Stream) Head(n int64) *Stream {
-	if n < 1 {
-		panic("n must be greater than 0")
-	}
-
-	source := make(chan interface{})
-
-	go func() {
-		for item := range s.source {
-			n--
-			if n >= 0 {
-				source <- item
-			}
-			if n == 0 {
-				close(source)
-			}
-		}
-		if n > 0 {
-			close(source)
-		}
-	}()
-
-	return Range(source)
-}
-
 // Skip Returns a Stream that skips size elements.
 func (s *Stream) Skip(size int) *Stream {
 	if size == 0 {
@@ -291,7 +266,7 @@ func (s *Stream) Skip(size int) *Stream {
 // Limit Returns a Stream that contains size elements.
 func (s *Stream) Limit(size int) *Stream {
 	if size == 0 {
-		return Of()
+		return Empty()
 	}
 	if size < 0 {
 		panic("size must be greater than -1")
@@ -394,7 +369,7 @@ func (s *Stream) Walk(f WalkFunc, opts ...Option) *Stream {
 
 			wg.Add(1)
 			// better to safely run caller defined method
-			NewGoroutine(func() {
+			go NewGoroutine(func() {
 				defer func() {
 					wg.Done()
 					<-pool

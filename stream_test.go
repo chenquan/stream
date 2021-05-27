@@ -19,7 +19,7 @@
 package stream
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"sort"
 	"testing"
@@ -34,7 +34,7 @@ func equal(t *testing.T, stream *Stream, data []interface{}) {
 		t.Errorf(" %v, want %v", items, data)
 	}
 }
-func assetEqual(t *testing.T, except interface{}, data interface{}) {
+func assertEqual(t *testing.T, except interface{}, data interface{}) {
 	if !reflect.DeepEqual(except, data) {
 		t.Errorf(" %v, want %v", data, except)
 	}
@@ -42,32 +42,32 @@ func assetEqual(t *testing.T, except interface{}, data interface{}) {
 }
 func TestEmpty(t *testing.T) {
 	empty := Empty()
-	assetEqual(t, len(empty.source), 0)
-	assetEqual(t, cap(empty.source), 0)
+	assertEqual(t, len(empty.source), 0)
+	assertEqual(t, cap(empty.source), 0)
 	empty.Foreach(func(item interface{}) {
 
 	})
 }
 func TestRange(t *testing.T) {
 	stream1 := Range(make(chan interface{}))
-	assetEqual(t, len(stream1.source), 0)
+	assertEqual(t, len(stream1.source), 0)
 
 	stream2 := Range(make(chan interface{}, 2))
-	assetEqual(t, len(stream2.source), 0)
-	assetEqual(t, cap(stream2.source), 2)
+	assertEqual(t, len(stream2.source), 0)
+	assertEqual(t, cap(stream2.source), 2)
 }
 func TestOf(t *testing.T) {
 	ints := []interface{}{1, 2, 3, 4}
 	of := Of(ints...).Sort(func(a, b interface{}) bool {
 		return a.(int) < b.(int)
 	})
-	assetEqual(t, len(of.source), 4)
-	assetEqual(t, cap(of.source), 4)
+	assertEqual(t, len(of.source), 4)
+	assertEqual(t, cap(of.source), 4)
 	var items []interface{}
 	for item := range of.source {
 		items = append(items, item)
 	}
-	assetEqual(t, items, ints)
+	assertEqual(t, items, ints)
 }
 
 func TestConcat(t *testing.T) {
@@ -86,7 +86,10 @@ func TestConcat(t *testing.T) {
 	ints := make([]interface{}, 0)
 	ints = append(ints, a1...)
 	ints = append(ints, a2...)
-	assetEqual(t, ints, items)
+	assertEqual(t, ints, items)
+
+	of := Of(1)
+	equal(t, of.Concat(of), []interface{}{1})
 
 }
 func TestFrom(t *testing.T) {
@@ -101,7 +104,7 @@ func TestFrom(t *testing.T) {
 	for item := range stream.source {
 		items = append(items, item)
 	}
-	assetEqual(t, items, ints)
+	assertEqual(t, items, ints)
 }
 func TestStream_Distinct(t *testing.T) {
 	stream := Of(1, 2, 3, 4, 4, 22, 2, 1, 4).Distinct(func(item interface{}) interface{} {
@@ -111,15 +114,18 @@ func TestStream_Distinct(t *testing.T) {
 }
 func TestStream_Count(t *testing.T) {
 	data := []interface{}{1, 2, 3, 4, 4, 22, 2, 1, 4}
-	assetEqual(t, Of(data...).Count(), len(data))
+	assertEqual(t, Of(data...).Count(), len(data))
 }
 
 func TestStream_Buffer(t *testing.T) {
 	stream := Of(1, 2, 4)
-	assetEqual(t, len(stream.source), 3)
-	assetEqual(t, cap(stream.source), 3)
+	assertEqual(t, len(stream.source), 3)
+	assertEqual(t, cap(stream.source), 3)
 	stream = stream.Buffer(10)
-	assetEqual(t, cap(stream.source), 10)
+	assertEqual(t, cap(stream.source), 10)
+	stream = stream.Buffer(-1)
+	assertEqual(t, cap(stream.source), 0)
+
 }
 func TestStream_Finish(t *testing.T) {
 	var items1 []interface{}
@@ -132,22 +138,21 @@ func TestStream_Finish(t *testing.T) {
 			items2 = append(items2, item)
 		},
 	)
-	assetEqual(t, items1, []interface{}{1, 2, 4})
-	assetEqual(t, items2, []interface{}{1, 2, 4})
+	assertEqual(t, items1, []interface{}{1, 2, 4})
+	assertEqual(t, items2, []interface{}{1, 2, 4})
 }
-func TestStream_Chan(t *testing.T) {
-	var items []interface{}
 
-	for item := range Of(1, 2, 3).Chan() {
-		items = append(items, item)
-	}
-	assetEqual(t, items, []interface{}{1, 2, 3})
-}
 func TestStream_Split(t *testing.T) {
 
 	stream := Of(1, 2, 444, 441, 1).Split(3)
-	assetEqual(t, (<-stream.source).([]interface{}), []interface{}{1, 2, 444})
-	assetEqual(t, (<-stream.source).([]interface{}), []interface{}{441, 1})
+	assertEqual(t, (<-stream.source).([]interface{}), []interface{}{1, 2, 444})
+	assertEqual(t, (<-stream.source).([]interface{}), []interface{}{441, 1})
+	assert.Panics(t, func() {
+		Of(1, 2, 444, 441, 1).Split(-1)
+	})
+	assert.Panics(t, func() {
+		Of(1, 2, 444, 441, 1).Split(0)
+	})
 }
 func TestStream_SplitSteam2(t *testing.T) {
 	streams := Of(1, 2, 444, 441, 1).SplitSteam(3)
@@ -170,36 +175,47 @@ func TestStream_Tail(t *testing.T) {
 	equal(t, Of(1, 232, 3, 2, 3).Tail(1), []interface{}{3})
 	equal(t, Of(1, 232, 3, 2, 3).Tail(2), []interface{}{2, 3})
 }
+func TestTailZero(t *testing.T) {
+	assert.Panics(t, func() {
+		Of(1, 2, 3, 4).Tail(0).Finish(func(item interface{}) {
 
-func TestStream_Head(t *testing.T) {
-	equal(t, Of(1, 232, 3, 2, 3).Head(2), []interface{}{1, 232})
-	equal(t, Of(1, 232, 3, 2, 3).Head(1), []interface{}{1})
-
+		})
+	})
 }
 func TestStream_Skip(t *testing.T) {
-	assetEqual(t, 3, Of(1, 2, 3, 4).Skip(1).Count())
-	assetEqual(t, 1, Of(1, 2, 3, 4).Skip(3).Count())
+	assertEqual(t, 3, Of(1, 2, 3, 4).Skip(1).Count())
+	assertEqual(t, 1, Of(1, 2, 3, 4).Skip(3).Count())
 	equal(t, Of(1, 2, 3, 4).Skip(3), []interface{}{4})
+	assert.Panics(t, func() {
+		Of(1, 2, 3, 4).Skip(-1)
+	})
+	equal(t, Of(1, 2, 3).Skip(0), []interface{}{1, 2, 3})
+
 }
 func TestStream_Limit(t *testing.T) {
 
 	equal(t, Of(1, 2, 3, 4).Limit(3), []interface{}{1, 2, 3})
 	equal(t, Of(1, 2, 3, 4).Limit(4), []interface{}{1, 2, 3, 4})
 	equal(t, Of(1, 2, 3, 4).Limit(5), []interface{}{1, 2, 3, 4})
+	equal(t, Of(1, 2, 3, 4).Limit(0), []interface{}{})
+	assert.Panics(t, func() {
+		Of(1, 2, 3, 4).Limit(-1)
+	})
+
 }
 func TestStream_Foreach(t *testing.T) {
 	var items []interface{}
 	Of(1, 2, 3, 4).Foreach(func(item interface{}) {
 		items = append(items, item)
 	})
-	assetEqual(t, []interface{}{1, 2, 3, 4}, items)
+	assertEqual(t, []interface{}{1, 2, 3, 4}, items)
 }
 func TestStream_ForeachOrdered(t *testing.T) {
 	var items []interface{}
 	Of(1, 2, 3, 4).ForeachOrdered(func(item interface{}) {
 		items = append(items, item)
 	})
-	assetEqual(t, []interface{}{4, 3, 2, 1}, items)
+	assertEqual(t, []interface{}{4, 3, 2, 1}, items)
 }
 func TestStream_Concat(t *testing.T) {
 	stream := Of(1).Concat(Of(2), Of(3))
@@ -210,7 +226,7 @@ func TestStream_Concat(t *testing.T) {
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].(int) < items[j].(int)
 	})
-	assetEqual(t, []interface{}{1, 2, 3}, items)
+	assertEqual(t, []interface{}{1, 2, 3}, items)
 }
 
 func TestStream_Filter(t *testing.T) {
@@ -230,7 +246,7 @@ func TestStream_Map(t *testing.T) {
 		return a.(int) < b.(int)
 	}), []interface{}{2, 3, 4})
 }
-func TestStream_FlatMap2(t *testing.T) {
+func TestStream_FlatMap(t *testing.T) {
 	equal(t,
 		Of([]interface{}{1, 2}, []interface{}{3, 4}).FlatMap(func(item interface{}) interface{} {
 			return item
@@ -238,6 +254,14 @@ func TestStream_FlatMap2(t *testing.T) {
 			return a.(int) < b.(int)
 		}),
 		[]interface{}{1, 2, 3, 4},
+	)
+	equal(t,
+		Of(1, 2, 3, 4, 5, 6).FlatMap(func(item interface{}) interface{} {
+			return item
+		}).Sort(func(a, b interface{}) bool {
+			return a.(int) < b.(int)
+		}),
+		[]interface{}{1, 2, 3, 4, 5, 6},
 	)
 }
 func TestStream_Group(t *testing.T) {
@@ -269,13 +293,6 @@ func TestStream_Reverse(t *testing.T) {
 	equal(t, Of(1, 2, 3, 4, 1).Reverse(), []interface{}{1, 4, 3, 2, 1})
 }
 
-func TestStream_FlatMap(t *testing.T) {
-	Of([]interface{}{1, 2}, []interface{}{4, 5}).FlatMap(func(item interface{}) interface{} {
-		return item
-	}).Foreach(func(item interface{}) {
-		fmt.Println(item)
-	})
-}
 func TestStream_ParallelFinish(t *testing.T) {
 
 	Of(1, 23).ParallelFinish(func(item interface{}) {
@@ -284,31 +301,60 @@ func TestStream_ParallelFinish(t *testing.T) {
 }
 
 func TestStream_AnyMach(t *testing.T) {
-	assetEqual(t, false, Of(1, 2, 3).AnyMach(func(item interface{}) bool {
+	assertEqual(t, false, Of(1, 2, 3).AnyMach(func(item interface{}) bool {
 		return 4 == item.(int)
 	}))
-	assetEqual(t, true, Of(1, 2, 3).AnyMach(func(item interface{}) bool {
+	assertEqual(t, true, Of(1, 2, 3).AnyMach(func(item interface{}) bool {
 		return 2 == item.(int)
 	}))
 }
 func TestStream_AllMach(t *testing.T) {
-	assetEqual(
+	assertEqual(
 		t, true, Of(1, 2, 3).AllMach(func(item interface{}) bool {
 			return true
 		}),
 	)
-	assetEqual(
+	assertEqual(
 		t, false, Of(1, 2, 3).AllMach(func(item interface{}) bool {
 			return false
 		}),
 	)
-	assetEqual(
+	assertEqual(
 		t, false, Of(1, 2, 3).AllMach(func(item interface{}) bool {
 			return item.(int) == 1
 		}),
 	)
 }
 
-func TestStream_String(t *testing.T) {
-	assetEqual(t, fmt.Sprintf("Stream{len:%d,cap:%d}", 1, 1), Of(1).String())
+func TestStream_Chan(t *testing.T) {
+	var items []interface{}
+
+	for item := range Of(1, 2, 3).Chan() {
+		items = append(items, item)
+	}
+	assertEqual(t, items, []interface{}{1, 2, 3})
+}
+
+func TestStream_SplitSteam(t *testing.T) {
+	streams := Of(1, 2, 444, 441, 1).SplitSteam(3)
+	equal(t, (<-streams.source).(*Stream), []interface{}{1, 2, 444})
+	equal(t, (<-streams.source).(*Stream), []interface{}{441, 1})
+	assert.Panics(t, func() {
+		Of(1, 2, 444, 441, 1).SplitSteam(-1)
+	})
+}
+
+func TestStream_Peek(t *testing.T) {
+	items := make([]interface{}, 0)
+	Of(1, 2, 3, 4).Peek(func(item interface{}) {
+		items = append(items, item)
+	}).Finish()
+	assertEqual(t, items, []interface{}{1, 2, 3, 4})
+}
+func TestStream_FindFirst(t *testing.T) {
+	result, err := Of(1, 2, 3).FindFirst()
+	assert.NoError(t, err)
+	result, err = Of().FindFirst()
+	assert.Error(t, err)
+	assert.Equal(t, nil, result)
 }

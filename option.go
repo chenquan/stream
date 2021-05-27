@@ -41,7 +41,7 @@ func loadOptions(options ...Option) *Options {
 // WithOption return a Option interface
 func WithOption(options *Options) Option {
 	return func(ops *Options) {
-		ops = options
+		*ops = *options
 	}
 }
 

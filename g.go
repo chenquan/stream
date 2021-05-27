@@ -18,16 +18,18 @@
 
 package stream
 
+import "go.uber.org/zap"
+
 func Recover(cleanups ...func()) {
 	for _, cleanup := range cleanups {
 		cleanup()
 	}
 
-	if p := recover(); p != nil {
-
+	if e := recover(); e != nil {
+		Log.Error("stream failed", zap.Any("error", e))
 	}
 }
 func NewGoroutine(f func()) {
 	defer Recover()
-	go f()
+	f()
 }

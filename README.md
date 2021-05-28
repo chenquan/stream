@@ -2,6 +2,12 @@
 
 > 流处理API,你可以像Java Stream一样使用它
 
+[![Godoc](https://img.shields.io/badge/godoc-reference-brightgreen)](https://pkg.go.dev/github.com/chenquan/stream)
+[![Go Report Card](https://goreportcard.com/badge/github.com/chenquan/stream)](https://goreportcard.com/report/github.com/chenquan/stream)
+[![Coverage Status](https://coveralls.io/repos/github/chenquan/stream/badge.svg?branch=master)](https://coveralls.io/github/chenquan/stream?branch=master)
+[![GitHub](https://img.shields.io/github/license/chenquan/stream)](https://github.com/chenquan/stream/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/chenquan/stream)](https://github.com/chenquan/stream/stargazers)
+
 ## GRATITUDE
 
 **API的部分实现参考`go-zero`中模块[fx](https://github.com/tal-tech/go-zero/blob/master/core/fx/stream.go)**

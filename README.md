@@ -98,6 +98,3 @@ Of(1, 4, 2, 3, 1).Tail(2)
 
 **更多使用方式请参考:[stream_test.go](stream_test.go)**
 
-## LICENSE
-
-[Apache License 2.0](LICENSE)

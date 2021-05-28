@@ -1,25 +1,54 @@
 name: Go
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [ push, pull_request ]
 
 jobs:
 
-  build:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+          - centos-latest
+          - centos6
+          - centos7
+          - ubuntu1604
+          - ubuntu1804
+          - macos-10.15
+          - windows-2019
+          - windows-10
+          - windows-7
+        go: [ '1.16','1.15','1.14', '1.13', '1.12' ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Run Unit tests
+        run: |
+          go test -v -coverprofile=profile.cov ./...
+
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov
+          flag-name: Go-${{ matrix.go }}
+          parallel: true
+
+  finish:
+    needs: test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.15
-
-    - name: Build
-      run: go build -v ./...
-
-    - name: Test
-      run: go test -v ./...
+      - uses: shogo82148/actions-goveralls@v1
+        with:
+          parallel-finished: true

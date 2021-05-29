@@ -20,6 +20,7 @@ package stream
 
 import "go.uber.org/zap"
 
+// Recover Recover when panic.
 func Recover(cleanups ...func()) {
 	for _, cleanup := range cleanups {
 		cleanup()
@@ -29,6 +30,8 @@ func Recover(cleanups ...func()) {
 		Log.Error("stream failed", zap.Any("error", e))
 	}
 }
+
+// NewGoroutine New a Safe goroutine.
 func NewGoroutine(f func()) {
 	defer Recover()
 	f()

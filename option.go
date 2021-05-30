@@ -18,11 +18,12 @@
 
 package stream
 
-// Options Options
+// Options defines the struct to customize a Stream.
 type Options struct {
 	workSize int
 }
 
+// Option defines the method to customize a Stream.
 type Option func(options *Options)
 
 // loadOptions return a Options

@@ -7,40 +7,62 @@ on:
     branches: [ master ]
 
 jobs:
-
-  test:
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
-          - centos-latest
-          - centos6
-          - centos7
-          - ubuntu1604
-          - ubuntu1804
-          - macos-10.15
-          - windows-2019
-          - windows-10
-          - windows-7
-        go: [ '1.16','1.15','1.14' ]
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Go
+      - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go }}
+          go-version: ^1.13
+        id: go
 
-      - name: Build
-        run: go build -v ./...
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-      - name: Run Unit tests
+      - name: Get dependencies
         run: |
-          go test -v -coverprofile=profile.cov ./...
+          go get -v -t -d ./...
+      - name: Test
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Codecov
+        uses: codecov/codecov-action@v1.0.6
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+  #  test:
+  #    runs-on: ubuntu-latest
+  #    strategy:
+  #      fail-fast: false
+  #      matrix:
+  #        os:
+  #          - macos-latest
+  #          - ubuntu-latest
+  #          - windows-latest
+  #          - centos-latest
+  #          - centos6
+  #          - centos7
+  #          - ubuntu1604
+  #          - ubuntu1804
+  #          - macos-10.15
+  #          - windows-2019
+  #          - windows-10
+  #          - windows-7
+  #        go: [ '1.16','1.15','1.14' ]
+  #    steps:
+  #      - uses: actions/checkout@v2
+  #
+  #      - name: Set up Go
+  #        uses: actions/setup-go@v2
+  #        with:
+  #          go-version: ${{ matrix.go }}
+  #
+  #      - name: Build
+  #        run: go build -v ./...
+  #
+  #      - name: Run Unit tests
+  #        run: |
+  #          go test -v -coverprofile=profile.cov ./...
 
   #      - name: Send coverage
   #        uses: shogo82148/actions-goveralls@v1
@@ -48,13 +70,13 @@ jobs:
   #          path-to-profile: profile.cov
   #          flag-name: Go-${{ matrix.go }}
   #          parallel: true
-
-  finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test
-        run: go test -race -coverprofile=coverage.txt -covermode=./...
-      - uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+#
+#  finish:
+##    needs: test
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Test
+#        run: go test -race -coverprofile=coverage.txt -covermode=./...
+#      - uses: codecov/codecov-action@v1
+#        with:
+#          token: ${{ secrets.CODECOV_TOKEN }}

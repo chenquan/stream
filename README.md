@@ -7,6 +7,7 @@
 [![codecov](https://codecov.io/gh/chenquan/stream/branch/master/graph/badge.svg?token=MXUK9MSJP1)](https://codecov.io/gh/chenquan/stream)
 [![GitHub](https://img.shields.io/github/license/chenquan/stream)](https://github.com/chenquan/stream/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/chenquan/stream)](https://github.com/chenquan/stream/stargazers)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fchenquan%2Fstream.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fchenquan%2Fstream?ref=badge_shield)
 
 ## GRATITUDE
 
@@ -98,3 +99,7 @@ Of(1, 4, 2, 3, 1).Tail(2)
 
 **更多使用方式请参考:[stream_test.go](stream_test.go)**
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fchenquan%2Fstream.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fchenquan%2Fstream?ref=badge_large)

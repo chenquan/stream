@@ -361,18 +361,17 @@ func TestStream_SplitSteam(t *testing.T) {
 	})
 }
 
-//func TestStream_Peek(t *testing.T) {
-//	items := make([]interface{}, 0)
-//	Of(1, 2, 3, 4).Peek(func(item interface{}) {
-//		items = append(items, item)
-//	}).Finish()
-//	assertEqual(t, items, []interface{}{1, 2, 3, 4})
-//}
-//func TestStream_FindFirst(t *testing.T) {
-//	result, err := Of(1, 2, 3).FindFirst()
-//	assert.NoError(t, err)
-//	result, err = Of().FindFirst()
-//	assert.Error(t, err)
-//	assert.Equal(t, nil, result)
-//}
-
+func TestStream_Peek(t *testing.T) {
+	items := make([]interface{}, 0)
+	Of(1, 2, 3, 4).Peek(func(item interface{}) {
+		items = append(items, item)
+	}).Finish()
+	assertEqual(t, items, []interface{}{1, 2, 3, 4})
+}
+func TestStream_FindFirst(t *testing.T) {
+	result, err := Of(1, 2, 3).FindFirst()
+	assert.NoError(t, err)
+	result, err = Of().FindFirst()
+	assert.Error(t, err)
+	assert.Equal(t, nil, result)
+}

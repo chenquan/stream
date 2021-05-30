@@ -42,17 +42,19 @@ jobs:
         run: |
           go test -v -coverprofile=profile.cov ./...
 
-      - name: Send coverage
-        uses: shogo82148/actions-goveralls@v1
-        with:
-          path-to-profile: profile.cov
-          flag-name: Go-${{ matrix.go }}
-          parallel: true
+  #      - name: Send coverage
+  #        uses: shogo82148/actions-goveralls@v1
+  #        with:
+  #          path-to-profile: profile.cov
+  #          flag-name: Go-${{ matrix.go }}
+  #          parallel: true
 
   finish:
     needs: test
     runs-on: ubuntu-latest
     steps:
+      - name: Test
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

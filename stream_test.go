@@ -117,7 +117,6 @@ func TestStream_Count(t *testing.T) {
 
 func TestStream_Buffer(t *testing.T) {
 	stream := Of(1, 2, 4)
-	assertEqual(t, len(stream.source), 3)
 	assertEqual(t, cap(stream.source), 3)
 	stream = stream.Buffer(10)
 	assertEqual(t, cap(stream.source), 10)

@@ -12,15 +12,13 @@
 
 **API的部分实现参考`go-zero`中模块[fx](https://github.com/tal-tech/go-zero/blob/master/core/fx/stream.go)**
 
-### EXAMPLE
-
-## 安装
+## INSTALLATION
 
 ```shell
 go get -u github.com/chenquan/stream
 ```
 
-## 使用案例
+## EXAMPLE
 
 ### 1.创建流
 
@@ -97,4 +95,5 @@ Of(1, 4, 2, 3, 1).Tail(2)
 ```
 
 **更多使用方式请参考:[stream_test.go](stream_test.go)**
-
+## LICENSE
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fchenquan%2Fstream.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fchenquan%2Fstream?ref=badge_large)

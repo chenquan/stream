@@ -34,12 +34,14 @@ func equal(t *testing.T, stream *Stream, data []interface{}) {
 		t.Errorf(" %v, want %v", items, data)
 	}
 }
+
 func assertEqual(t *testing.T, except interface{}, data interface{}) {
 	if !reflect.DeepEqual(except, data) {
 		t.Errorf(" %v, want %v", data, except)
 	}
 
 }
+
 func TestEmpty(t *testing.T) {
 	empty := Empty()
 	assertEqual(t, len(empty.source), 0)
@@ -48,6 +50,7 @@ func TestEmpty(t *testing.T) {
 
 	})
 }
+
 func TestRange(t *testing.T) {
 	stream1 := Range(make(chan interface{}))
 	assertEqual(t, len(stream1.source), 0)
@@ -56,6 +59,7 @@ func TestRange(t *testing.T) {
 	assertEqual(t, len(stream2.source), 0)
 	assertEqual(t, cap(stream2.source), 2)
 }
+
 func TestOf(t *testing.T) {
 	ints := []interface{}{1, 2, 3, 4}
 	of := Of(ints...).Sort(func(a, b interface{}) bool {
@@ -90,6 +94,7 @@ func TestConcat(t *testing.T) {
 	equal(t, of.Concat(of), []interface{}{1})
 
 }
+
 func TestFrom(t *testing.T) {
 	ints := make([]interface{}, 0)
 	stream := From(func(source chan<- interface{}) {
@@ -104,12 +109,14 @@ func TestFrom(t *testing.T) {
 	}
 	assertEqual(t, items, ints)
 }
+
 func TestStream_Distinct(t *testing.T) {
 	stream := Of(1, 2, 3, 4, 4, 22, 2, 1, 4).Distinct(func(item interface{}) interface{} {
 		return item
 	})
 	equal(t, stream, []interface{}{1, 2, 3, 4, 22})
 }
+
 func TestStream_Count(t *testing.T) {
 	data := []interface{}{1, 2, 3, 4, 4, 22, 2, 1, 4}
 	assertEqual(t, Of(data...).Count(), len(data))
@@ -124,6 +131,7 @@ func TestStream_Buffer(t *testing.T) {
 	assertEqual(t, cap(stream.source), 0)
 
 }
+
 func TestStream_Finish(t *testing.T) {
 	var items1 []interface{}
 	var items2 []interface{}
@@ -151,6 +159,7 @@ func TestStream_Split(t *testing.T) {
 		Of(1, 2, 444, 441, 1).Split(0)
 	})
 }
+
 func TestStream_SplitSteam2(t *testing.T) {
 	streams := Of(1, 2, 444, 441, 1).SplitSteam(3)
 
@@ -168,6 +177,7 @@ func TestStream_Sort(t *testing.T) {
 	})
 	equal(t, stream, ints)
 }
+
 func TestStream_Tail(t *testing.T) {
 	equal(t, Of(1, 232, 3, 2, 3).Tail(1), []interface{}{3})
 	equal(t, Of(1, 232, 3, 2, 3).Tail(2), []interface{}{2, 3})
@@ -179,6 +189,7 @@ func TestTailZero(t *testing.T) {
 		})
 	})
 }
+
 func TestStream_Skip(t *testing.T) {
 	assertEqual(t, 3, Of(1, 2, 3, 4).Skip(1).Count())
 	assertEqual(t, 1, Of(1, 2, 3, 4).Skip(3).Count())
@@ -200,6 +211,7 @@ func TestStream_Limit(t *testing.T) {
 	})
 
 }
+
 func TestStream_Foreach(t *testing.T) {
 	var items []interface{}
 	Of(1, 2, 3, 4).Foreach(func(item interface{}) {
@@ -207,6 +219,7 @@ func TestStream_Foreach(t *testing.T) {
 	})
 	assertEqual(t, []interface{}{1, 2, 3, 4}, items)
 }
+
 func TestStream_ForeachOrdered(t *testing.T) {
 	var items []interface{}
 	Of(1, 2, 3, 4).ForeachOrdered(func(item interface{}) {
@@ -214,6 +227,7 @@ func TestStream_ForeachOrdered(t *testing.T) {
 	})
 	assertEqual(t, []interface{}{4, 3, 2, 1}, items)
 }
+
 func TestStream_Concat(t *testing.T) {
 	stream := Of(1).Concat(Of(2), Of(3))
 	var items []interface{}
@@ -236,6 +250,7 @@ func TestStream_Filter(t *testing.T) {
 		return a.(int) < b.(int)
 	}), []interface{}{3, 4})
 }
+
 func TestStream_Map(t *testing.T) {
 	equal(t, Of(1, 2, 3).Map(func(item interface{}) interface{} {
 		return item.(int) + 1
@@ -243,6 +258,7 @@ func TestStream_Map(t *testing.T) {
 		return a.(int) < b.(int)
 	}), []interface{}{2, 3, 4})
 }
+
 func TestStream_FlatMap(t *testing.T) {
 	equal(t,
 		Of([]interface{}{1, 2}, []interface{}{3, 4}).FlatMap(func(item interface{}) interface{} {
@@ -261,6 +277,7 @@ func TestStream_FlatMap(t *testing.T) {
 		[]interface{}{1, 2, 3, 4, 5, 6},
 	)
 }
+
 func TestStream_Group(t *testing.T) {
 	equal(t,
 		Of(1, 2, 3, 4).Group(func(item interface{}) interface{} {
@@ -280,12 +297,14 @@ func TestStream_Group(t *testing.T) {
 		[]interface{}{1, 2, 3, 4},
 	)
 }
+
 func TestStream_Merge(t *testing.T) {
 	equal(t, Of(1, 2, 3, 4).Merge(), []interface{}{
 
 		[]interface{}{1, 2, 3, 4},
 	})
 }
+
 func TestStream_Reverse(t *testing.T) {
 	equal(t, Of(1, 2, 3, 4, 1).Reverse(), []interface{}{1, 4, 3, 2, 1})
 }
@@ -305,6 +324,7 @@ func TestStream_AnyMach(t *testing.T) {
 		return 2 == item.(int)
 	}))
 }
+
 func TestStream_AllMach(t *testing.T) {
 	assertEqual(
 		t, true, Of(1, 2, 3).AllMach(func(item interface{}) bool {
@@ -355,3 +375,4 @@ func TestStream_SplitSteam(t *testing.T) {
 //	assert.Error(t, err)
 //	assert.Equal(t, nil, result)
 //}
+

@@ -4,7 +4,8 @@
 
 [![Godoc](https://img.shields.io/badge/godoc-reference-brightgreen)](https://pkg.go.dev/github.com/chenquan/stream)
 [![Go Report Card](https://goreportcard.com/badge/github.com/chenquan/stream)](https://goreportcard.com/report/github.com/chenquan/stream)
-[![codecov](https://codecov.io/gh/chenquan/stream/branch/master/graph/badge.svg?token=MXUK9MSJP1)](https://codecov.io/gh/chenquan/stream)[![GitHub](https://img.shields.io/github/license/chenquan/stream)](https://github.com/chenquan/stream/blob/master/LICENSE)
+[![codecov](https://codecov.io/gh/chenquan/stream/branch/master/graph/badge.svg?token=MXUK9MSJP1)](https://codecov.io/gh/chenquan/stream)
+[![GitHub](https://img.shields.io/github/license/chenquan/stream)](https://github.com/chenquan/stream/blob/master/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/chenquan/stream)](https://github.com/chenquan/stream/stargazers)
 
 ## GRATITUDE

@@ -5,10 +5,11 @@ import (
 	"testing"
 )
 
-func TestNewRing(t *testing.T) {
-	ring := NewRing(1)
-	assert.Equal(t, &Ring{elements: make([]interface{}, 1)}, ring)
-}
+//
+//func TestNewRing(t *testing.T) {
+//	ring := NewRing(1)
+//	assert.Equal(t, &Ring{elements: make([]interface{}, 1)}, ring)
+//}
 func TestRing_Add(t *testing.T) {
 	ring := NewRing(12)
 	ring.Add(1)

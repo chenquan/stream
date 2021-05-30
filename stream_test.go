@@ -61,8 +61,6 @@ func TestOf(t *testing.T) {
 	of := Of(ints...).Sort(func(a, b interface{}) bool {
 		return a.(int) < b.(int)
 	})
-	assertEqual(t, len(of.source), 4)
-	assertEqual(t, cap(of.source), 4)
 	var items []interface{}
 	for item := range of.source {
 		items = append(items, item)
